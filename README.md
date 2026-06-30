@@ -167,11 +167,11 @@ SQL-Practice/
 * [x] SQL Basics
 * [x] Joins
 * [x] Aggregate Functions
+* [x] GROUP BY
 * [x] Subqueries
-* [ ] GROUP BY
+* [x] CTEs
 * [ ] HAVING
 * [ ] CASE WHEN
-* [ ] CTEs
 * [ ] Window Functions
 * [ ] Date Functions
 * [ ] String Functions

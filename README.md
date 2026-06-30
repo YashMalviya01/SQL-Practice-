@@ -207,7 +207,7 @@ This repository is designed around the SQL concepts most frequently asked in Dat
 
 **Yash Malviya**
 
-Aspiring Data Analyst | SQL | Python | PostgreSQL | Tableau | AWS | Snowflake
+Data Analyst | SQL | Python | PostgreSQL | Tableau | AWS | Snowflake
 
 ---
 

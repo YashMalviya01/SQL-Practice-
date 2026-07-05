@@ -170,7 +170,7 @@ SQL-Practice/
 * [x] GROUP BY
 * [x] Subqueries
 * [x] CTEs
-* [ ] HAVING
+* [X] HAVING
 * [ ] CASE WHEN
 * [ ] Window Functions
 * [ ] Date Functions

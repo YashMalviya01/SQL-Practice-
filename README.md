@@ -171,7 +171,7 @@ SQL-Practice/
 * [x] Subqueries
 * [x] CTEs
 * [X] HAVING
-* [ ] CASE WHEN
+* [X] CASE WHEN
 * [ ] Window Functions
 * [ ] Date Functions
 * [ ] String Functions

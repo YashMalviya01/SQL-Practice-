@@ -172,7 +172,7 @@ SQL-Practice/
 * [x] CTEs
 * [X] HAVING
 * [X] CASE WHEN
-* [ ] Window Functions
+* [X] Window Functions
 * [ ] Date Functions
 * [ ] String Functions
 * [ ] Advanced Interview Questions

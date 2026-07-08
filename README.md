@@ -1,4 +1,4 @@
-# SQL Interview Practice
+# SQL Interview Practice..
 
 A structured SQL practice repository focused on mastering SQL concepts required for **Data Analyst** and **Business Intelligence** interviews. This repository contains topic-wise SQL problems, solutions, and practice datasets covering beginner to advanced concepts.
 

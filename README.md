@@ -173,7 +173,7 @@ SQL-Practice/
 * [X] HAVING
 * [X] CASE WHEN
 * [X] Window Functions
-* [ ] Date Functions
+* [X] Date Functions
 * [ ] String Functions
 * [ ] Advanced Interview Questions
 

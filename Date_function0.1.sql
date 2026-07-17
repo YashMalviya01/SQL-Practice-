@@ -1,4 +1,4 @@
-/*Date functions practice queries level 1 - easy*/
+ /*Date functions practice queries level 1 - easy*/
 
 
 /*Query 1: Extract the year and month from each order date*/

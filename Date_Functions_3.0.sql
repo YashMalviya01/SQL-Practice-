@@ -164,6 +164,298 @@ LEFT JOIN monthly_revenue previous_year
 
 
 
+/*Query 26: Customer churn detection
+
+Question: Identify customers whose latest order was at least 90 days ago.*/
+
+
+WITH customer_activity AS(
+	SELECT 
+		customer_id,
+  		MAX(order_date)::DATE AS last_order_date
+	FROM orders
+	GROUP BY customer_id
+)
+
+SELECT 
+	c.customer_id,
+	c.customer_name,
+	ca.;ast_order_date,
+	CURRENT_DATE - ca.last_order_date AS inactive_days
+FROM customers c
+JOIN customer_activity ca ON c.customer_id = ca.customer_id	
+WHERE ca.last_order_date <= CURRENT_DATE - INTERVAL'90 days'
+ORDER BY inactive_days DESC;
+
+                             
+
+/*Query 27: First-to-second purchase conversion within 30 days
+
+Question: Calculate the percentage of customers who made their second purchase within 30 days of their first purchase.*/
+
+
+WITH ranked_orders AS (
+    SELECT
+        customer_id,
+        order_date,
+
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_id
+            ORDER BY order_date
+        ) AS order_number
+
+    FROM orders
+),
+
+first_second_orders AS (
+    SELECT
+        customer_id,
+
+        MAX(
+            CASE
+                WHEN order_number = 1
+                THEN order_date
+            END
+        ) AS first_order_date,
+
+        MAX(
+            CASE
+                WHEN order_number = 2
+                THEN order_date
+            END
+        ) AS second_order_date
+
+    FROM ranked_orders
+    WHERE order_number <= 2
+    GROUP BY customer_id
+)
+
+SELECT
+    COUNT(*) AS customers_with_first_order,
+
+    COUNT(*) FILTER (
+        WHERE second_order_date
+              <= first_order_date + INTERVAL '30 days'
+    ) AS converted_within_30_days,
+
+    ROUND(
+        100.0 * COUNT(*) FILTER (
+            WHERE second_order_date
+                  <= first_order_date + INTERVAL '30 days'
+        )
+        / NULLIF(COUNT(*), 0),
+        2
+    ) AS conversion_percentage
+
+FROM first_second_orders;
+
+
+/*Query 28: Monthly active, new, and returning customers
+
+Question: For every month, calculate:
+
+Total active customers
+New customers making their first-ever purchase
+Returning customers*/
+
+
+WITH customer_months AS (
+    SELECT DISTINCT
+        customer_id,
+        DATE_TRUNC('month', order_date)::DATE AS order_month
+    FROM orders
+),
+
+first_purchase AS (
+    SELECT
+        customer_id,
+        MIN(order_month) AS first_purchase_month
+    FROM customer_months
+    GROUP BY customer_id
+)
+
+SELECT
+    cm.order_month,
+
+    COUNT(DISTINCT cm.customer_id)
+        AS active_customers,
+
+    COUNT(DISTINCT cm.customer_id) FILTER (
+        WHERE cm.order_month = fp.first_purchase_month
+    ) AS new_customers,
+
+    COUNT(DISTINCT cm.customer_id) FILTER (
+        WHERE cm.order_month > fp.first_purchase_month
+    ) AS returning_customers
+
+FROM customer_months cm
+
+JOIN first_purchase fp
+    ON cm.customer_id = fp.customer_id
+
+GROUP BY cm.order_month
+ORDER BY cm.order_month;
+
+
+
+/*Query 29: Longest consecutive monthly purchase streak
+
+Question: For every customer, determine their longest streak of consecutive calendar months containing at least one purchase.*/
+
+WITH customer_months AS (
+    SELECT DISTINCT
+        customer_id,
+        DATE_TRUNC('month', order_date)::DATE AS order_month
+    FROM orders
+),
+
+numbered_months AS (
+    SELECT
+        customer_id,
+        order_month,
+
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_id
+            ORDER BY order_month
+        ) AS rn
+
+    FROM customer_months
+),
+
+streak_groups AS (
+    SELECT
+        customer_id,
+        order_month,
+        order_month - rn * INTERVAL '1 month' AS streak_group
+    FROM numbered_months
+),
+
+streak_lengths AS (
+    SELECT
+        customer_id,
+        streak_group,
+        COUNT(*) AS streak_length
+    FROM streak_groups
+    GROUP BY customer_id, streak_group
+)
+
+SELECT
+    customer_id,
+    MAX(streak_length) AS longest_monthly_streak
+FROM streak_lengths
+GROUP BY customer_id
+ORDER BY longest_monthly_streak DESC;
+
+
+/*Query 30: Cohort retention matrix for Months 0–3
+
+Question: Build a cohort retention matrix showing retention percentages for:
+
+Month 0
+Month 1
+Month 2
+Month 3*/
+
+WITH customer_cohorts AS (
+    SELECT
+        customer_id,
+        DATE_TRUNC('month', signup_date)::DATE AS cohort_month
+    FROM customers
+),
+
+customer_activity AS (
+    SELECT DISTINCT
+        customer_id,
+        DATE_TRUNC('month', order_date)::DATE AS activity_month
+    FROM orders
+),
+
+cohort_activity AS (
+    SELECT
+        cc.customer_id,
+        cc.cohort_month,
+        ca.activity_month,
+
+        (
+            EXTRACT(YEAR FROM AGE(ca.activity_month, cc.cohort_month)) * 12
+            +
+            EXTRACT(MONTH FROM AGE(ca.activity_month, cc.cohort_month))
+        )::INT AS month_number
+
+    FROM customer_cohorts cc
+
+    JOIN customer_activity ca
+        ON cc.customer_id = ca.customer_id
+
+    WHERE ca.activity_month >= cc.cohort_month
+),
+
+cohort_sizes AS (
+    SELECT
+        cohort_month,
+        COUNT(DISTINCT customer_id) AS cohort_size
+    FROM customer_cohorts
+    GROUP BY cohort_month
+)
+
+SELECT
+    ca.cohort_month,
+    cs.cohort_size,
+
+    ROUND(
+        100.0 * COUNT(DISTINCT ca.customer_id)
+        FILTER (WHERE month_number = 0)
+        / NULLIF(cs.cohort_size, 0),
+        2
+    ) AS month_0_retention,
+
+    ROUND(
+        100.0 * COUNT(DISTINCT ca.customer_id)
+        FILTER (WHERE month_number = 1)
+        / NULLIF(cs.cohort_size, 0),
+        2
+    ) AS month_1_retention,
+
+    ROUND(
+        100.0 * COUNT(DISTINCT ca.customer_id)
+        FILTER (WHERE month_number = 2)
+        / NULLIF(cs.cohort_size, 0),
+        2
+    ) AS month_2_retention,
+
+    ROUND(
+        100.0 * COUNT(DISTINCT ca.customer_id)
+        FILTER (WHERE month_number = 3)
+        / NULLIF(cs.cohort_size, 0),
+        2
+    ) AS month_3_retention
+
+FROM cohort_activity ca
+
+JOIN cohort_sizes cs
+    ON ca.cohort_month = cs.cohort_month
+
+GROUP BY
+    ca.cohort_month,
+    cs.cohort_size
+
+ORDER BY ca.cohort_month;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

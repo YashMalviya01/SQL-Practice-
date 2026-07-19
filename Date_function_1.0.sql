@@ -3,7 +3,7 @@
 
 /*Query 1: Extract the year and month from each order date*/
 
-
+ 
 SELECT
     order_id,
     order_date,

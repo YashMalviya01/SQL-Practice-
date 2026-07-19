@@ -174,6 +174,7 @@ SQL-Practice/
 * [X] CASE WHEN
 * [X] Window Functions
 * [X] Date Functions
+* [X] Union Function
 * [ ] String Functions
 * [ ] Advanced Interview Questions
 

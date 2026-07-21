@@ -175,7 +175,7 @@ SQL-Practice/
 * [X] Window Functions
 * [X] Date Functions
 * [X] Union / Union All
-* [ ] String Functions
+* [X] String Functions
 * [ ] Advanced Interview Questions
 
 ---
